@@ -16,6 +16,7 @@
 import collectd
 import json
 import urllib2
+import numbers
 
 PREFIX = "marathon"
 MARATHON_HOST = "localhost"
@@ -51,8 +52,10 @@ def read_callback():
         for group in ['gauges', 'histograms', 'meters', 'timers', 'counters']:
             for name,values in metrics.get(group, {}).items():
                 for metric, value in values.items():
-                    if not isinstance(value, basestring):
+                    if isinstance(value, numbers.Number):
                         dispatch_stat('gauge', '.'.join((name, metric)), value)
+                    else:
+                        log_verbose('Skipping metric %s with value (%s) %s' % (metric, type(value), value))
     except urllib2.URLError as e:
         collectd.error('marathon plugin: Error connecting to %s - %r' % (MARATHON_URL, e))
 
